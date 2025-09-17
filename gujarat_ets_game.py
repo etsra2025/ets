@@ -6,21 +6,21 @@ from typing import Dict, List, Optional, Callable
 def render_tile(tile_idx: int, tile: Dict):
     """Render a single tile"""
     players_here = [p for p in st.session_state.players if p.position == tile_idx]
-    player_indicators = " ".join(["⚫" if p.color == COLORS['red'] else "⚪" for p in players_here])
+    player_indicators = " ".join(["🏭" if p.color == COLORS['red'] else "⚡" for p in players_here])
     
     text_color = 'white' if tile['color'] in [COLORS['black'], COLORS['dark_gray'], COLORS['cyan']] else 'black'
     
     st.markdown(f"""
-    <div class="tile-card" style="background-color:{tile['color']}; color:{text_color}; text-align: center; padding: 8px; border-radius: 8px; border: 2px solid #000; height: 80px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 0.75rem; font-weight: bold;">
-        <div style="line-height: 1.1;">{tile['text']}</div>
-        <div style="margin-top: 4px; font-size: 1rem;">{player_indicators}</div>
+    <div class="tile-card" style="background-color:{tile['color']}; color:{text_color} !important; text-align: center; padding: 8px; border-radius: 8px; border: 2px solid #000; height: 80px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 0.75rem; font-weight: bold;">
+        <div style="line-height: 1.1; color: {text_color} !important;">{tile['text']}</div>
+        <div style="margin-top: 4px; font-size: 1rem; color: {text_color} !important;">{player_indicators}</div>
     </div>
     """, unsafe_allow_html=True)
 
 # Page configuration
 st.set_page_config(
     page_title="Gujarat ETS - Emission Trading Simulation",
-    page_icon="🌐",
+    page_icon="🏭",
     layout="wide",
     initial_sidebar_state="expanded"
 )
