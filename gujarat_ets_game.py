@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Callable
 def render_tile(tile_idx: int, tile: Dict):
     """Render a single tile"""
     players_here = [p for p in st.session_state.players if p.position == tile_idx]
-    player_indicators = " ".join(["🏭" if p.color == COLORS['red'] else "⚡" for p in players_here])
+    player_indicators = " ".join(["⚫" if p.color == COLORS['red'] else "⚪" for p in players_here])
     
     text_color = 'white' if tile['color'] in [COLORS['black'], COLORS['dark_gray'], COLORS['cyan']] else 'black'
     
@@ -20,7 +20,7 @@ def render_tile(tile_idx: int, tile: Dict):
 # Page configuration
 st.set_page_config(
     page_title="Gujarat ETS - Emission Trading Simulation",
-    page_icon="🏭",
+    page_icon="🌐",
     layout="wide",
     initial_sidebar_state="expanded"
 )
