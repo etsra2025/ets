@@ -72,7 +72,7 @@ def get_custom_css():
             color: #FFFFFF !important;
         }}
 
-        /* Sidebar text should be white with shadow */
+        /* Sidebar text should be black for better readability */
         .css-1d391kg *,
         .css-1d391kg .stMarkdown *, 
         .css-1d391kg .stText *,
@@ -82,8 +82,35 @@ def get_custom_css():
         .css-1d391kg label,
         section[data-testid="stSidebar"] *,
         .stSidebar * {{
-            color: white !important;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+            color: #000000 !important;
+            text-shadow: none !important;
+        }}
+
+        /* Fix the top right toolbar/header bar to be white */
+        .stApp > header,
+        [data-testid="stHeader"],
+        .css-18e3th9,
+        .css-1544g2n,
+        .main > div:first-child,
+        .block-container > div:first-child {{
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }}
+
+        /* Target the specific top toolbar elements */
+        .stApp > header *,
+        [data-testid="stHeader"] *,
+        .css-18e3th9 *,
+        .css-1544g2n * {{
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }}
+
+        /* Also target any fixed position elements that might be the black bar */
+        [style*="position: fixed"],
+        [style*="position:fixed"] {{
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
         }}
 
         /* Main content area - VERY aggressive black text enforcement */
