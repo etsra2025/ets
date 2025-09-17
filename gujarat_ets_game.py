@@ -6,9 +6,9 @@ from typing import Dict, List, Optional, Callable
 def render_tile(tile_idx: int, tile: Dict):
     """Render a single tile"""
     players_here = [p for p in st.session_state.players if p.position == tile_idx]
-    player_indicators = " ".join(["🔴" if p.color == COLORS['red'] else "🔵" for p in players_here])
+    player_indicators = " ".join(["⚫" if p.color == COLORS['red'] else "⚪" for p in players_here])
     
-    text_color = 'white' if tile['color'] in [COLORS['black'], COLORS['dark_gray']] else 'black'
+    text_color = 'white' if tile['color'] in [COLORS['black'], COLORS['dark_gray'], COLORS['cyan']] else 'black'
     
     st.markdown(f"""
     <div class="tile-card" style="background-color:{tile['color']}; color:{text_color}; text-align: center; padding: 8px; border-radius: 8px; border: 2px solid #000; height: 80px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 0.75rem; font-weight: bold;">
@@ -20,7 +20,7 @@ def render_tile(tile_idx: int, tile: Dict):
 # Page configuration
 st.set_page_config(
     page_title="Gujarat ETS - Emission Trading Simulation",
-    page_icon="🏭",
+    page_icon="🌐",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -50,8 +50,6 @@ MARKET_ALLOCATION_PERCENT = 20
 MAX_PERMIT_HOLDING_PERCENT = 150
 
 # Cached CSS to avoid re-rendering
-# Replace your get_custom_css() function with this updated version:
-
 @st.cache_data
 def get_custom_css():
     return f"""
@@ -466,22 +464,26 @@ def order_cancel_effect(p: Player, multiplier: float):
     p.pollution *= multiplier
     p.earnings -= (1 - multiplier) * pre * PRODUCE_PRICE
 
-# Tile definitions - cached for better performance
+# Tile definitions - cached for better performance - Updated for 5x5 grid
 @st.cache_data
 def get_tile_rules():
     return [
-        {"text": "GO\nTrue-up period", "color": COLORS['cyan']},
-        {"text": "Unseasonal Rains\nPollution -0.1%", "color": COLORS['teal']},
-        {"text": "CEMS Issue\nEmissions +20%", "color": COLORS['red']},
-        {"text": "Client Order\nProduction +30%", "color": COLORS['green']},
-        {"text": "Abatement\n₹20L, -40%", "color": COLORS['dark_gray']},
-        {"text": "Advanced Abate\n₹40L, -60%", "color": COLORS['white']},
-        {"text": "CEMS Issue\nEmissions +10%", "color": COLORS['red']},
-        {"text": "Bird's Nest\nPay ₹5,000", "color": COLORS['yellow']},
-        {"text": "Client Order\nProduction +10%", "color": COLORS['green']},
-        {"text": "Tax Issue\n50% at ₹800", "color": COLORS['light_gray']},
-        {"text": "CEMS Issue\nEmissions +30%", "color": COLORS['red']},
-        {"text": "Maintenance\n₹1L, -10%", "color": COLORS['teal']},
+        {"text": "Uniform Auction GO\nTrue-up period", "color": COLORS['dark_gray']},  # 0 (corner)
+        {"text": "Unseasonal Rains\nPollution -0.1%", "color": COLORS['white']},      # 1
+        {"text": "CEMS Issue\nEmissions +20%", "color": COLORS['white']},           # 2
+        {"text": "Client Order\nProduction +30%", "color": COLORS['white']},        # 3
+        {"text": "Abatement\n₹20L, -40%", "color": COLORS['teal']},                 # 4 (corner)
+        {"text": "Advanced Abate\n₹40L, -60%", "color": COLORS['teal']},            # 5
+        {"text": "CEMS Issue\nEmissions +10%", "color": COLORS['white']},           # 6
+        {"text": "Bird's Nest\nPay ₹5,000", "color": COLORS['white']},              # 7
+        {"text": "Client Order\nProduction +10%", "color": COLORS['white']},        # 8 (corner)
+        {"text": "Tax Issue\n50% at ₹800", "color": COLORS['white']},               # 9
+        {"text": "CEMS Issue\nEmissions +30%", "color": COLORS['white']},           # 10
+        {"text": "Hire Additional Maintenance\n₹1L, -10%", "color": COLORS['cyan']}, # 11
+        {"text": "Hire Additional Maintenance Staff\n₹1.5L, -15%", "color": COLORS['cyan']}, # 12 (corner)
+        {"text": "Client Order Cancel, -5%", "color": COLORS['white']},             # 13
+        {"text": "CEMS Data Quality Issue\nImputation, +10%", "color": COLORS['white']}, # 14
+        {"text": "Client Order Cancel, -5%", "color": COLORS['white']},             # 15
     ]
 
 def get_tile_effects():
@@ -498,6 +500,10 @@ def get_tile_effects():
         lambda p: tax_effect(p),                                # Tax
         lambda p: setattr(p, "pollution", p.pollution * 1.30),  # CEMS +30%
         lambda p: maintenance_effect(p, 100000, 0.9),           # Maintenance
+        lambda p: maintenance_effect(p, 150000, 0.85),          # Maintenance Staff
+        lambda p: order_cancel_effect(p, 0.95),                 # Order Cancel
+        lambda p: setattr(p, "pollution", p.pollution * 1.10),  # Data Quality
+        lambda p: order_cancel_effect(p, 0.95),                 # Order Cancel
     ]
 
 # Initialize session state
@@ -520,62 +526,62 @@ def init_session_state():
             st.session_state[key] = value
 
 def render_game_board():
-    """Render the game board as a square grid using Streamlit columns"""
+    """Render the game board as a 5x5 square grid using Streamlit columns"""
     st.header("Game Board")
     
     tiles = st.session_state.tile_rules
     
-    # Create a 4x4 grid layout manually
-    # Row 1 (top): tiles 9, 8, 7, 6
-    cols1 = st.columns(4)
-    top_tiles = [9, 8, 7, 6]
-    for i, tile_idx in enumerate(top_tiles):
-        if tile_idx < len(tiles):
-            with cols1[i]:
-                render_tile(tile_idx, tiles[tile_idx])
+    # Create a 5x5 grid layout
+    # The board follows this pattern (like Monopoly):
+    # Row 1 (top): tiles 12, 11, 10, 9, 8 (reverse order)
+    # Row 2: tile 13, empty, empty, empty, 7
+    # Row 3: tile 14, empty, empty, empty, 6
+    # Row 4: tile 15, empty, empty, empty, 5
+    # Row 5 (bottom): tiles 0, 1, 2, 3, 4 (normal order)
     
-    # Row 2 (middle-top): tiles 10, empty, empty, 5
-    cols2 = st.columns(4)
+    # Row 1 (top): tiles 12, 11, 10, 9, 8
+    cols1 = st.columns(5)
+    top_tiles = [12, 11, 10, 9, 8]
+    for i, tile_idx in enumerate(top_tiles):
+        with cols1[i]:
+            render_tile(tile_idx, tiles[tile_idx])
+    
+    # Row 2: tile 13, empty, empty, empty, 7
+    cols2 = st.columns(5)
     with cols2[0]:
-        render_tile(10, tiles[10])
-    with cols2[1]:
-        st.markdown('<div style="height: 80px;"></div>', unsafe_allow_html=True)
-    with cols2[2]:
-        st.markdown('<div style="height: 80px;"></div>', unsafe_allow_html=True)
-    with cols2[3]:
+        render_tile(13, tiles[13])
+    for i in range(1, 4):
+        with cols2[i]:
+            st.markdown('<div style="height: 80px;"></div>', unsafe_allow_html=True)
+    with cols2[4]:
+        render_tile(7, tiles[7])
+    
+    # Row 3: tile 14, empty, empty, empty, 6
+    cols3 = st.columns(5)
+    with cols3[0]:
+        render_tile(14, tiles[14])
+    for i in range(1, 4):
+        with cols3[i]:
+            st.markdown('<div style="height: 80px;"></div>', unsafe_allow_html=True)
+    with cols3[4]:
+        render_tile(6, tiles[6])
+    
+    # Row 4: tile 15, empty, empty, empty, 5
+    cols4 = st.columns(5)
+    with cols4[0]:
+        render_tile(15, tiles[15])
+    for i in range(1, 4):
+        with cols4[i]:
+            st.markdown('<div style="height: 80px;"></div>', unsafe_allow_html=True)
+    with cols4[4]:
         render_tile(5, tiles[5])
     
-    # Row 3 (middle-bottom): tiles 11, empty, empty, 4
-    cols3 = st.columns(4)
-    with cols3[0]:
-        render_tile(11, tiles[11])
-    with cols3[1]:
-        st.markdown('<div style="height: 80px;"></div>', unsafe_allow_html=True)
-    with cols3[2]:
-        st.markdown('<div style="height: 80px;"></div>', unsafe_allow_html=True)
-    with cols3[3]:
-        render_tile(4, tiles[4])
-    
-    # Row 4 (bottom): tiles 0, 1, 2, 3
-    cols4 = st.columns(4)
-    bottom_tiles = [0, 1, 2, 3]
+    # Row 5 (bottom): tiles 0, 1, 2, 3, 4
+    cols5 = st.columns(5)
+    bottom_tiles = [0, 1, 2, 3, 4]
     for i, tile_idx in enumerate(bottom_tiles):
-        with cols4[i]:
+        with cols5[i]:
             render_tile(tile_idx, tiles[tile_idx])
-
-def render_tile(tile_idx: int, tile: Dict):
-    """Render a single tile"""
-    players_here = [p for p in st.session_state.players if p.position == tile_idx]
-    player_indicators = " ".join(["🔴" if p.color == COLORS['red'] else "🔵" for p in players_here])
-    
-    text_color = 'white' if tile['color'] in [COLORS['black'], COLORS['dark_gray']] else 'black'
-    
-    st.markdown(f"""
-    <div class="tile-card" style="background-color:{tile['color']}; color:{text_color}; text-align: center; padding: 8px; border-radius: 8px; border: 2px solid #000; height: 80px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 0.75rem; font-weight: bold;">
-        <div style="line-height: 1.1;">{tile['text']}</div>
-        <div style="margin-top: 4px; font-size: 1rem;">{player_indicators}</div>
-    </div>
-    """, unsafe_allow_html=True)
 
 def render_player_status():
     """Render player status cards"""
@@ -870,11 +876,11 @@ def main():
         
         st.info(f"Cost: {money(cost)} | Pollution Reduction: {reduction}% | Current Earnings: {money(player.earnings)}")
     
-    # Main game area
+    # Main game area - REORDERED: Market Status first, then Game Board, then Industry Status, then Game Log
     if len(st.session_state.players) > 0:
+        render_market_status(market_cap, permit_price)
         render_game_board()
         render_player_status()
-        render_market_status(market_cap, permit_price)
         
         # Game log
         if st.session_state.game_log:
