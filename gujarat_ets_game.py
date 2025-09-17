@@ -50,6 +50,8 @@ MARKET_ALLOCATION_PERCENT = 20
 MAX_PERMIT_HOLDING_PERCENT = 150
 
 # Cached CSS to avoid re-rendering
+# Replace your get_custom_css() function with this updated version:
+
 @st.cache_data
 def get_custom_css():
     return f"""
@@ -98,6 +100,27 @@ def get_custom_css():
             border: 2px solid #333333 !important;
         }}
 
+        /* Fix the +/- increment/decrement buttons on number inputs */
+        .stNumberInput button,
+        .stNumberInput [data-testid="stNumberInputStepUp"],
+        .stNumberInput [data-testid="stNumberInputStepDown"],
+        [data-testid="stNumberInput"] button,
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {{
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+            border: 2px solid #333333 !important;
+        }}
+
+        /* Target the step buttons more specifically */
+        .step-up,
+        .step-down,
+        [class*="step"] {{
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+            border: 2px solid #333333 !important;
+        }}
+
         /* Target Streamlit's input containers */
         [data-testid="stNumberInput"] input,
         [data-testid="stTextInput"] input,
@@ -119,6 +142,15 @@ def get_custom_css():
         .css-1d391kg input,
         section[data-testid="stSidebar"] input,
         .stSidebar input {{
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+            border: 2px solid #333333 !important;
+        }}
+
+        /* Also target sidebar +/- buttons */
+        .css-1d391kg button,
+        section[data-testid="stSidebar"] button,
+        .stSidebar button {{
             background-color: #FFFFFF !important;
             color: #000000 !important;
             border: 2px solid #333333 !important;
