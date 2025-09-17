@@ -175,7 +175,7 @@ def get_custom_css():
             color: #000000 !important;
         }}
         
-        .main * {{
+        .main *:not(.tile-card *) {{
             color: #000000 !important;
         }}
 
@@ -183,6 +183,12 @@ def get_custom_css():
         .main-header,
         .main-header * {{
             color: #FFFFFF !important;
+        }}
+
+        /* Ensure tile cards can override text color */
+        .tile-card,
+        .tile-card * {{
+            color: inherit !important;
         }}
 
         /* Success/Error/Warning custom classes should keep their colors */
