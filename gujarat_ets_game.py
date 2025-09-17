@@ -62,7 +62,7 @@ def get_custom_css():
 
         /* Make only H1 white */
         .main .block-container h1 {{
-        color: #FFFFFF !important;
+            color: #FFFFFF !important;
         }}
 
         /* Main content area - ensure all text is black */
@@ -76,6 +76,32 @@ def get_custom_css():
         .main .block-container span,
         .main .block-container .stMarkdown,
         .main .block-container .stText {{
+            color: #000000 !important;
+        }}
+
+        /* IMPORTANT: Force specific Streamlit warning, info, and text elements to be black */
+        .main .block-container .stWarning,
+        .main .block-container .stInfo,
+        .main .block-container .stAlert,
+        .main .block-container [data-testid="stWarning"],
+        .main .block-container [data-testid="stInfo"],
+        .main .block-container [data-testid="stAlert"] {{
+            color: #000000 !important;
+        }}
+
+        /* Force text inside warning/info boxes to be black */
+        .main .block-container .stWarning div,
+        .main .block-container .stInfo div,
+        .main .block-container .stAlert div,
+        .main .block-container [data-testid="stWarning"] div,
+        .main .block-container [data-testid="stInfo"] div,
+        .main .block-container [data-testid="stAlert"] div {{
+            color: #000000 !important;
+        }}
+
+        /* Force game log text to be black */
+        .main .block-container [data-testid="stText"] p,
+        .main .block-container .element-container p {{
             color: #000000 !important;
         }}
 
