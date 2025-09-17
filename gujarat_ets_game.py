@@ -56,75 +56,95 @@ def get_custom_css():
     <style>
         /* Force light theme for the entire app */
         .stApp {{
-            background-color: #FFFFFF;
-            color: #000000;
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
         }}
 
-        /* Make only H1 white */
-        .main .block-container h1 {{
+        /* Universal text color override - most aggressive approach */
+        * {{
+            color: #000000 !important;
+        }}
+
+        /* Make only H1 white - override universal rule */
+        .main .block-container h1,
+        .main-header h1, 
+        .main-header p {{
             color: #FFFFFF !important;
         }}
 
-        /* Main content area - ensure all text is black */
-        .main .block-container h2,
-        .main .block-container h3,
-        .main .block-container h4,
-        .main .block-container h5,
-        .main .block-container h6,
-        .main .block-container p,
-        .main .block-container div,
-        .main .block-container span,
-        .main .block-container .stMarkdown,
-        .main .block-container .stText {{
-            color: #000000 !important;
-        }}
-
-        /* IMPORTANT: Force specific Streamlit warning, info, and text elements to be black */
-        .main .block-container .stWarning,
-        .main .block-container .stInfo,
-        .main .block-container .stAlert,
-        .main .block-container [data-testid="stWarning"],
-        .main .block-container [data-testid="stInfo"],
-        .main .block-container [data-testid="stAlert"] {{
-            color: #000000 !important;
-        }}
-
-        /* Force text inside warning/info boxes to be black */
-        .main .block-container .stWarning div,
-        .main .block-container .stInfo div,
-        .main .block-container .stAlert div,
-        .main .block-container [data-testid="stWarning"] div,
-        .main .block-container [data-testid="stInfo"] div,
-        .main .block-container [data-testid="stAlert"] div {{
-            color: #000000 !important;
-        }}
-
-        /* Force game log text to be black */
-        .main .block-container [data-testid="stText"] p,
-        .main .block-container .element-container p {{
-            color: #000000 !important;
-        }}
-
-        /* Main content area */
-        .main .block-container {{
-            background-color: #FFFFFF;
-            color: #000000;
-        }}
-        
-        /* Sidebar styling */
-        .css-1d391kg {{
-            background-color: #FFFFFF !important;
-        }}
-        
-        /* Ensure sidebar text is readable - use high contrast colors */
-        .css-1d391kg .stMarkdown, 
-        .css-1d391kg .stText,
+        /* Sidebar text should be white with shadow */
+        .css-1d391kg *,
+        .css-1d391kg .stMarkdown *, 
+        .css-1d391kg .stText *,
         .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3, 
         .css-1d391kg h4, .css-1d391kg h5, .css-1d391kg h6,
         .css-1d391kg p, .css-1d391kg div, .css-1d391kg span,
-        .css-1d391kg label {{
+        .css-1d391kg label,
+        section[data-testid="stSidebar"] *,
+        .stSidebar * {{
             color: white !important;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+        }}
+
+        /* Main content area - VERY aggressive black text enforcement */
+        .main .block-container *:not(.main-header *),
+        .main .element-container *,
+        .main [data-testid="stText"] *,
+        .main [data-testid="stMarkdown"] *,
+        .main [data-testid="stInfo"] *,
+        .main [data-testid="stWarning"] *,
+        .main [data-testid="stAlert"] *,
+        .main [data-testid="stSuccess"] *,
+        .main [data-testid="stError"] *,
+        .main div:not(.main-header *),
+        .main p:not(.main-header *),
+        .main span:not(.main-header *) {{
+            color: #000000 !important;
+        }}
+
+        /* Force all text elements in main to be black - nuclear option */
+        .main {{
+            color: #000000 !important;
+        }}
+        
+        .main * {{
+            color: #000000 !important;
+        }}
+
+        /* Re-override for header and sidebar after nuclear option */
+        .main-header,
+        .main-header * {{
+            color: #FFFFFF !important;
+        }}
+
+        /* Success/Error/Warning custom classes should keep their colors */
+        .success,
+        .success * {{
+            color: white !important;
+        }}
+        
+        .danger,
+        .danger * {{
+            color: white !important;
+        }}
+        
+        .warning,
+        .warning * {{
+            color: black !important;
+        }}
+
+                
+        /* Main content area */
+        .main .block-container {{
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }}
+        
+        /* Sidebar styling - more comprehensive selectors */
+        .css-1d391kg,
+        section[data-testid="stSidebar"],
+        .stSidebar {{
+            background-color: #FFFFFF !important;
         }}
         
         .main-header {{
