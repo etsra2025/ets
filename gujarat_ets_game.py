@@ -86,31 +86,42 @@ def get_custom_css():
             text-shadow: none !important;
         }}
 
-        /* Fix the top right toolbar/header bar to be white */
-        .stApp > header,
-        [data-testid="stHeader"],
-        .css-18e3th9,
-        .css-1544g2n,
-        .main > div:first-child,
-        .block-container > div:first-child {{
+        /* Fix input boxes to be white with black text like buttons */
+        .stNumberInput input,
+        .stTextInput input,
+        .stSelectbox select,
+        input[type="number"],
+        input[type="text"],
+        select {{
             background-color: #FFFFFF !important;
             color: #000000 !important;
+            border: 2px solid #333333 !important;
         }}
 
-        /* Target the specific top toolbar elements */
-        .stApp > header *,
-        [data-testid="stHeader"] *,
-        .css-18e3th9 *,
-        .css-1544g2n * {{
+        /* Target Streamlit's input containers */
+        [data-testid="stNumberInput"] input,
+        [data-testid="stTextInput"] input,
+        [data-testid="stSelectbox"] select {{
             background-color: #FFFFFF !important;
             color: #000000 !important;
+            border: 2px solid #333333 !important;
         }}
 
-        /* Also target any fixed position elements that might be the black bar */
-        [style*="position: fixed"],
-        [style*="position:fixed"] {{
+        /* Also target the input wrapper divs */
+        .stNumberInput > div > div > input,
+        .stTextInput > div > div > input {{
             background-color: #FFFFFF !important;
             color: #000000 !important;
+            border: 2px solid #333333 !important;
+        }}
+
+        /* Target any input elements in the sidebar specifically */
+        .css-1d391kg input,
+        section[data-testid="stSidebar"] input,
+        .stSidebar input {{
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+            border: 2px solid #333333 !important;
         }}
 
         /* Main content area - VERY aggressive black text enforcement */
@@ -172,6 +183,33 @@ def get_custom_css():
         section[data-testid="stSidebar"],
         .stSidebar {{
             background-color: #FFFFFF !important;
+        }}
+        
+        /* Fix the top right toolbar/header bar to be white */
+        .stApp > header,
+        [data-testid="stHeader"],
+        .css-18e3th9,
+        .css-1544g2n,
+        .main > div:first-child,
+        .block-container > div:first-child {{
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }}
+
+        /* Target the specific top toolbar elements */
+        .stApp > header *,
+        [data-testid="stHeader"] *,
+        .css-18e3th9 *,
+        .css-1544g2n * {{
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+        }}
+
+        /* Also target any fixed position elements that might be the black bar */
+        [style*="position: fixed"],
+        [style*="position:fixed"] {{
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
         }}
         
         .main-header {{
