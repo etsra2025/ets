@@ -297,7 +297,7 @@ def get_custom_css():
             padding: 0.5rem;
             margin: 0.2rem;
             text-align: center;
-            font-size: 1rem;
+            font-size: 5rem;
             font-weight: bold;
             height: 80px;
             display: flex;
