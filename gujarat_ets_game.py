@@ -481,7 +481,7 @@ def order_cancel_effect(p: Player, multiplier: float):
 @st.cache_data
 def get_tile_rules():
     return [
-        {"text": "Uniform Auction GO\nTrue-up period", "color": COLORS['dark_gray']},  # 0 (corner)
+        {"text": "Uniform Auction GO\nTrue-up period", "color": COLORS['light_gray']},  # 0 (corner)
         {"text": "Unseasonal Rains\nPollution -0.1%", "color": COLORS['white']},      # 1
         {"text": "CEMS Issue\nEmissions +20%", "color": COLORS['white']},           # 2
         {"text": "Client Order\nProduction +30%", "color": COLORS['white']},        # 3
@@ -492,8 +492,8 @@ def get_tile_rules():
         {"text": "Client Order\nProduction +10%", "color": COLORS['white']},        # 8 (corner)
         {"text": "Tax Issue\n50% at ₹800", "color": COLORS['white']},               # 9
         {"text": "CEMS Issue\nEmissions +30%", "color": COLORS['white']},           # 10
-        {"text": "Hire Additional Maintenance\n₹1L, -10%", "color": COLORS['cyan']}, # 11
-        {"text": "Hire Additional Maintenance Staff\n₹1.5L, -15%", "color": COLORS['cyan']}, # 12 (corner)
+        {"text": "Hire Additional Maintenance\n₹1L, -10%", "color": COLORS['teal']}, # 11
+        {"text": "Hire Additional Maintenance Staff\n₹1.5L, -15%", "color": COLORS['teal']}, # 12 (corner)
         {"text": "Client Order Cancel, -5%", "color": COLORS['white']},             # 13
         {"text": "CEMS Data Quality Issue\nImputation, +10%", "color": COLORS['white']}, # 14
         {"text": "Client Order Cancel, -5%", "color": COLORS['white']},             # 15
