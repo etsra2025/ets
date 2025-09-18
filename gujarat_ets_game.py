@@ -49,6 +49,9 @@ INDUSTRY_ALLOCATION_PERCENT = 80
 MARKET_ALLOCATION_PERCENT = 20
 MAX_PERMIT_HOLDING_PERCENT = 150
 
+# Total number of tiles (0-15, so 16 tiles total)
+TOTAL_TILES = 16
+
 # Cached CSS to avoid re-rendering
 @st.cache_data
 def get_custom_css():
@@ -275,6 +278,16 @@ def get_custom_css():
         }}
         
         .active-player h3, .active-player p, .active-player strong {{
+            color: #000000 !important;
+        }}
+        
+        .finished-player {{
+            border-color: {COLORS['yellow']};
+            background-color: #fff8e1;
+            color: #000000 !important;
+        }}
+        
+        .finished-player h3, .finished-player p, .finished-player strong {{
             color: #000000 !important;
         }}
         
@@ -518,7 +531,9 @@ def init_session_state():
         'tile_effects': get_tile_effects(),
         'pending_investment': None,
         'last_roll': None,
-        'game_log': []
+        'game_log': [],
+        'roll_again_required': False,
+        'roll_was_too_high': False
     }
     
     for key, value in defaults.items():
@@ -593,17 +608,28 @@ def render_player_status():
             is_active = (i == st.session_state.current_turn and 
                         st.session_state.game_started and 
                         not st.session_state.game_over)
-            card_class = "active-player" if is_active else "player-card"
+            
+            # Determine card class based on player status
+            if player.finished:
+                card_class = "finished-player"
+                status_icon = "🟢"
+            elif is_active:
+                card_class = "active-player"
+                status_icon = "🟩"
+            else:
+                card_class = "player-card"
+                status_icon = ""
             
             st.markdown(f"""
             <div class="{card_class}">
-                <h3>{player.name} ({player.kind_name}) {'🟩' if is_active else ''}</h3>
+                <h3>{player.name} ({player.kind_name}) {status_icon}</h3>
                 <p><strong>Position:</strong> Tile {player.position}</p>
                 <p><strong>Production:</strong> {format_number(player.produce)} units</p>
                 <p><strong>Pollution:</strong> {format_number(player.pollution)} kg</p>
                 <p><strong>Permits:</strong> {player.permits:,} / {player.max_permits:,}</p>
                 <p><strong>Revenue:</strong> {money(player.revenue)}</p>
                 <p><strong>Earnings:</strong> {money(player.earnings)}</p>
+                {"<p><strong>Status:</strong> Finished the round!</p>" if player.finished else ""}
             </div>
             """, unsafe_allow_html=True)
 
@@ -628,37 +654,72 @@ def render_market_status(market_cap: int, permit_price: float):
             """, unsafe_allow_html=True)
 
 def handle_dice_roll():
-    """Handle dice rolling logic"""
+    """Handle dice rolling logic with single round completion"""
     current_player = st.session_state.players[st.session_state.current_turn]
     roll = current_player.roll()
     st.session_state.last_roll = roll
     
-    # Move player
+    # Calculate potential new position
     old_pos = current_player.position
-    current_player.position = (current_player.position + roll) % len(st.session_state.tile_rules)
+    potential_new_pos = current_player.position + roll
     
-    # Apply tile effect
-    st.session_state.tile_effects[current_player.position](current_player)
+    # Check if player would go past the final tile (15) or reach/exceed GO (0) after starting
+    if old_pos > 0 and potential_new_pos >= TOTAL_TILES:
+        # Player would complete the circuit or go beyond
+        if potential_new_pos == TOTAL_TILES:
+            # Exactly reaches GO - game ends for this player
+            current_player.position = 0  # Set to GO
+            current_player.finished = True
+            
+            # Apply GO tile effect (if any)
+            st.session_state.tile_effects[0](current_player)
+            
+            st.session_state.game_log.append(f"{current_player.name} rolled {roll} and completed the round at GO/True-up!")
+            
+            # Check if all players have finished
+            if all(p.finished for p in st.session_state.players):
+                st.session_state.game_over = True
+                st.session_state.game_log.append("All players have completed the round! Game Over!")
+            else:
+                # Move to next player
+                st.session_state.current_turn = (st.session_state.current_turn + 1) % 2
+                # Skip finished players
+                while st.session_state.players[st.session_state.current_turn].finished and not st.session_state.game_over:
+                    st.session_state.current_turn = (st.session_state.current_turn + 1) % 2
+            
+        else:
+            # Roll was too high - player must roll again
+            st.session_state.roll_again_required = True
+            st.session_state.roll_was_too_high = True
+            tiles_needed = TOTAL_TILES - current_player.position
+            st.session_state.game_log.append(f"{current_player.name} rolled {roll} but needs exactly {tiles_needed} to reach GO. Must roll again!")
+            return  # Don't advance turn
     
-    # Normalize values
-    current_player.produce = float(rint(current_player.produce))
-    current_player.pollution = float(rint(current_player.pollution))
-    
-    # Log the move
-    tile_name = st.session_state.tile_rules[current_player.position]["text"].split('\n')[0]
-    st.session_state.game_log.append(f"{current_player.name} rolled {roll} and moved to {tile_name}")
-    
-    # Check if completed circuit
-    if old_pos != 0 and current_player.position == 0:
-        current_player.finished = True
-        st.session_state.game_log.append(f"{current_player.name} completed the circuit!")
+    else:
+        # Normal move within the board
+        current_player.position = potential_new_pos
         
-        if all(p.finished for p in st.session_state.players):
-            st.session_state.game_over = True
-    
-    # Next turn
-    if not st.session_state.game_over:
-        st.session_state.current_turn = (st.session_state.current_turn + 1) % 2
+        # Apply tile effect
+        st.session_state.tile_effects[current_player.position](current_player)
+        
+        # Normalize values
+        current_player.produce = float(rint(current_player.produce))
+        current_player.pollution = float(rint(current_player.pollution))
+        
+        # Log the move
+        tile_name = st.session_state.tile_rules[current_player.position]["text"].split('\n')[0]
+        st.session_state.game_log.append(f"{current_player.name} rolled {roll} and moved to {tile_name}")
+        
+        # Reset roll again flags
+        st.session_state.roll_again_required = False
+        st.session_state.roll_was_too_high = False
+        
+        # Next turn (only if game isn't over)
+        if not st.session_state.game_over:
+            st.session_state.current_turn = (st.session_state.current_turn + 1) % 2
+            # Skip finished players
+            while st.session_state.players[st.session_state.current_turn].finished and not st.session_state.game_over:
+                st.session_state.current_turn = (st.session_state.current_turn + 1) % 2
 
 def render_final_results(market_cap: int):
     """Render final game results"""
@@ -684,7 +745,7 @@ def render_final_results(market_cap: int):
         if all_compliant:
             st.markdown("""
             <div class="success">
-                🎉 EVERYONE WINS! 🎉<br>
+                EVERYONE WINS!<br>
                 The cap-and-trade system worked!<br>
                 Environmental goals achieved with economic flexibility.
             </div>
@@ -692,7 +753,7 @@ def render_final_results(market_cap: int):
         else:
             st.markdown("""
             <div class="warning">
-                ⚠️ PARTIAL SUCCESS ⚠️<br>
+                PARTIAL SUCCESS<br>
                 Market cap achieved but compliance issues exist.<br>
                 Some regulatory enforcement needed.
             </div>
@@ -700,7 +761,7 @@ def render_final_results(market_cap: int):
     else:
         st.markdown("""
         <div class="danger">
-            ❌ EVERYONE LOSES ❌<br>
+            EVERYONE LOSES<br>
             Market cap exceeded - environmental damage occurred!<br>
             The cap-and-trade system failed to control pollution.
         </div>
@@ -710,7 +771,7 @@ def render_final_results(market_cap: int):
     st.subheader("Player Details")
     results_data = []
     for player in st.session_state.players:
-        compliance = "✅ Compliant" if player.pollution <= player.permits else "❌ Deficit"
+        compliance = "Compliant" if player.pollution <= player.permits else "Deficit"
         deficit = max(0, player.pollution - player.permits)
         
         results_data.append({
@@ -774,6 +835,8 @@ def main():
             st.session_state.game_over = False
             st.session_state.current_turn = 0
             st.session_state.game_log = []
+            st.session_state.roll_again_required = False
+            st.session_state.roll_was_too_high = False
             
             # Assign industry types randomly
             kinds = [LARGE, SMALL]
@@ -798,35 +861,53 @@ def main():
         
         if st.session_state.game_started and not st.session_state.game_over:
             current_player = st.session_state.players[st.session_state.current_turn]
-            if st.button(f"🎲 {current_player.name}: Roll Dice", type="secondary"):
-                handle_dice_roll()
-                st.rerun()
+            
+            # Check if current player is finished
+            if current_player.finished:
+                st.info(f"{current_player.name} has finished the round!")
+            else:
+                # Show appropriate button text based on roll status
+                if st.session_state.roll_again_required:
+                    if st.session_state.roll_was_too_high:
+                        button_text = f"🎲 {current_player.name}: Roll Again (Previous roll too high!)"
+                        st.warning(f"Roll was too high! {current_player.name} needs to roll exactly {TOTAL_TILES - current_player.position} to reach GO.")
+                    else:
+                        button_text = f"🎲 {current_player.name}: Roll Again"
+                else:
+                    button_text = f"🎲 {current_player.name}: Roll Dice"
+                
+                if st.button(button_text, type="secondary"):
+                    handle_dice_roll()
+                    st.rerun()
         
         # Trading section
-        if st.session_state.game_started:
+        if st.session_state.game_started and not st.session_state.game_over:
             st.subheader("Permit Trading")
             
             for i, player in enumerate(st.session_state.players):
-                max_affordable = int(player.earnings // permit_price) if permit_price > 0 else 0
-                max_by_limit = player.max_permits - player.permits
-                max_possible = min(st.session_state.market_permits, max_by_limit, max_affordable)
-                
-                if max_possible > 0:
-                    qty = st.number_input(f"Permits for {player.name}", 
-                                        min_value=0, 
-                                        max_value=max_possible, 
-                                        key=f"permits_{i}")
+                if not player.finished:  # Only allow trading for active players
+                    max_affordable = int(player.earnings // permit_price) if permit_price > 0 else 0
+                    max_by_limit = player.max_permits - player.permits
+                    max_possible = min(st.session_state.market_permits, max_by_limit, max_affordable)
                     
-                    if st.button(f"Buy {qty} permits", key=f"buy_{i}") and qty > 0:
-                        cost = qty * permit_price
-                        player.earnings -= cost
-                        player.permit_cost += cost
-                        player.total_cost += cost
-                        player.permits += qty
-                        st.session_state.market_permits -= qty
+                    if max_possible > 0:
+                        qty = st.number_input(f"Permits for {player.name}", 
+                                            min_value=0, 
+                                            max_value=max_possible, 
+                                            key=f"permits_{i}")
                         
-                        st.success(f"{player.name} bought {qty:,} permits for {money(cost)}")
-                        st.rerun()
+                        if st.button(f"Buy {qty} permits", key=f"buy_{i}") and qty > 0:
+                            cost = qty * permit_price
+                            player.earnings -= cost
+                            player.permit_cost += cost
+                            player.total_cost += cost
+                            player.permits += qty
+                            st.session_state.market_permits -= qty
+                            
+                            st.success(f"{player.name} bought {qty:,} permits for {money(cost)}")
+                            st.rerun()
+                    else:
+                        st.text(f"{player.name}: No permits available")
         
         # Reset button
         if st.button("New Game", type="secondary"):
@@ -840,9 +921,26 @@ def main():
         if st.session_state.last_roll:
             st.success(f"Last roll: {st.session_state.last_roll}")
         
+        # Display current turn info
         if st.session_state.game_started and not st.session_state.game_over:
             current_player = st.session_state.players[st.session_state.current_turn]
-            st.info(f"Current turn: {current_player.name}")
+            if current_player.finished:
+                # Find next active player
+                next_player_idx = st.session_state.current_turn
+                for _ in range(2):
+                    next_player_idx = (next_player_idx + 1) % 2
+                    if not st.session_state.players[next_player_idx].finished:
+                        st.info(f"Current turn: {st.session_state.players[next_player_idx].name}")
+                        break
+                else:
+                    st.info("All players finished!")
+            else:
+                st.info(f"Current turn: {current_player.name}")
+                
+                # Show position info for current player
+                tiles_to_go = TOTAL_TILES - current_player.position
+                if tiles_to_go <= 6:
+                    st.warning(f"ⓘ {current_player.name} needs exactly {tiles_to_go} to reach GO!")
     
     # Handle pending investments
     if st.session_state.pending_investment:
@@ -900,7 +998,13 @@ def main():
         
         st.markdown("""
         ### Game Objective
-        The goal is for all industries to collectively stay within the **market cap** for pollution while maintaining profitable operations.
+        The goal is for all industries to collectively stay within the **market cap** for pollution while maintaining profitable operations. The game ends when all players complete **one full round** around the board.
+        
+        ### Key Rules
+        1. **Single Round**: Each player must complete exactly one circuit around the board
+        2. **Exact Landing**: Players must roll the exact number to land on GO/True-up tile
+        3. **No Overshooting**: If a roll would take a player past GO, they must roll again
+        4. **Game Ends**: When all players have reached the GO/True-up tile
         
         ### Key Concepts
         1. **Cap-and-Trade**: Industries receive pollution permits and can trade them
@@ -920,6 +1024,7 @@ def main():
         4. Click "Start Game" to begin
         5. Take turns rolling dice and making decisions
         6. Use permit trading to stay compliant
+        7. Game ends when both players complete one full round
         """)
 
 if __name__ == "__main__":
