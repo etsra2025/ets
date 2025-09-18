@@ -11,9 +11,9 @@ def render_tile(tile_idx: int, tile: Dict):
     text_color = 'white' if tile['color'] in [COLORS['black'], COLORS['dark_gray'], COLORS['cyan']] else 'black'
     
     st.markdown(f"""
-    <div class="tile-card" style="background-color:{tile['color']}; color:{text_color} !important; text-align: center; padding: 8px; border-radius: 8px; border: 2px solid #000; height: 80px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 0.75rem; font-weight: bold;">
-        <div style="line-height: 1.1; color: {text_color} !important;">{tile['text']}</div>
-        <div style="margin-top: 4px; font-size: 1rem; color: {text_color} !important;">{player_indicators}</div>
+    <div class="tile-card" style="background-color:{tile['color']}; color:{text_color} !important; text-align: center; padding: 8px; border-radius: 8px; border: 2px solid #000;">
+        <div style="line-height: 1.2; color: {text_color} !important; font-weight: bold; font-size: 0.9rem;">{tile['text']}</div>
+        <div style="margin-top: 6px; font-size: 1.2rem; color: {text_color} !important;">{player_indicators}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -294,16 +294,48 @@ def get_custom_css():
         .tile-card {{
             border: 2px solid {COLORS['black']};
             border-radius: 8px;
-            padding: 0.5rem;
-            margin: 0.2rem;
+            padding: 10px;
+            margin: 4px;
             text-align: center;
-            font-size: 5rem;
             font-weight: bold;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
+            /* Make tiles consistently square */
+            width: 120px !important;
+            height: 120px !important;
+            min-width: 120px !important;
+            min-height: 120px !important;
+            max-width: 120px !important;
+            max-height: 120px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            /* Prevent shrinking */
+            flex-shrink: 0 !important;
+            /* Center the tile within its container */
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }}
+        
+        /* Ensure tile text is properly sized and readable */
+        .tile-card div:first-child {{
+            font-size: 1rem !important;
+            line-height: 1.2 !important;
+            margin-bottom: 8px !important;
+            text-align: center !important;
+            word-wrap: break-word !important;
+            hyphens: auto !important;
+        }}
+        
+        .tile-card div:last-child {{
+            font-size: 1.3rem !important;
+            margin-top: auto !important;
+        }}
+        
+        /* Make sure columns containing tiles are properly sized */
+        .stColumn > div {{
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
         }}
         
         .metric-card {{
@@ -402,6 +434,19 @@ def get_custom_css():
         
         [data-testid="metric-container"] > div {{
             color: #000000 !important;
+        }}
+        
+        /* Add spacing between board rows for better visual separation */
+        .board-row {{
+            margin-bottom: 8px !important;
+        }}
+        
+        /* Make empty cells in the middle have consistent height */
+        .empty-cell {{
+            height: 120px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }}
     </style>
     """
@@ -546,57 +591,60 @@ def render_game_board():
     
     tiles = st.session_state.tile_rules
     
-    # Create a 5x5 grid layout
-    # The board follows this pattern (like Monopoly):
+    # Create a 5x5 grid layout with proper spacing
     # Row 1 (top): tiles 12, 11, 10, 9, 8 (reverse order)
-    # Row 2: tile 13, empty, empty, empty, 7
-    # Row 3: tile 14, empty, empty, empty, 6
-    # Row 4: tile 15, empty, empty, empty, 5
-    # Row 5 (bottom): tiles 0, 1, 2, 3, 4 (normal order)
-    
-    # Row 1 (top): tiles 12, 11, 10, 9, 8
+    st.markdown('<div class="board-row">', unsafe_allow_html=True)
     cols1 = st.columns(5)
     top_tiles = [12, 11, 10, 9, 8]
     for i, tile_idx in enumerate(top_tiles):
         with cols1[i]:
             render_tile(tile_idx, tiles[tile_idx])
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Row 2: tile 13, empty, empty, empty, 7
+    st.markdown('<div class="board-row">', unsafe_allow_html=True)
     cols2 = st.columns(5)
     with cols2[0]:
         render_tile(13, tiles[13])
     for i in range(1, 4):
         with cols2[i]:
-            st.markdown('<div style="height: 80px;"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="empty-cell"></div>', unsafe_allow_html=True)
     with cols2[4]:
         render_tile(7, tiles[7])
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Row 3: tile 14, empty, empty, empty, 6
+    st.markdown('<div class="board-row">', unsafe_allow_html=True)
     cols3 = st.columns(5)
     with cols3[0]:
         render_tile(14, tiles[14])
     for i in range(1, 4):
         with cols3[i]:
-            st.markdown('<div style="height: 80px;"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="empty-cell"></div>', unsafe_allow_html=True)
     with cols3[4]:
         render_tile(6, tiles[6])
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Row 4: tile 15, empty, empty, empty, 5
+    st.markdown('<div class="board-row">', unsafe_allow_html=True)
     cols4 = st.columns(5)
     with cols4[0]:
         render_tile(15, tiles[15])
     for i in range(1, 4):
         with cols4[i]:
-            st.markdown('<div style="height: 80px;"></div>', unsafe_allow_html=True)
+            st.markdown('<div class="empty-cell"></div>', unsafe_allow_html=True)
     with cols4[4]:
         render_tile(5, tiles[5])
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Row 5 (bottom): tiles 0, 1, 2, 3, 4
+    st.markdown('<div class="board-row">', unsafe_allow_html=True)
     cols5 = st.columns(5)
     bottom_tiles = [0, 1, 2, 3, 4]
     for i, tile_idx in enumerate(bottom_tiles):
         with cols5[i]:
             render_tile(tile_idx, tiles[tile_idx])
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def render_player_status():
     """Render player status cards"""
@@ -1029,3 +1077,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+                
